@@ -137,7 +137,12 @@ const STR = {
   },
 };
 
-const fmtD = (d, lang) => new Date(d+"T12:00:00").toLocaleDateString(lang==="ms"?"ms-MY":"en-MY",{weekday:"short",month:"short",day:"numeric"});
+const fmtD = (d, lang) => {
+  // Postgres may return a plain "YYYY-MM-DD" or a full ISO timestamp.
+  // Normalize to just the date portion before parsing, to avoid "Invalid Date".
+  const datePart = String(d).slice(0, 10);
+  return new Date(datePart+"T12:00:00").toLocaleDateString(lang==="ms"?"ms-MY":"en-MY",{weekday:"short",month:"short",day:"numeric"});
+};
 const fmtT = (iso) => new Date(iso).toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"});
 
 function fmtHrs(hours) {
