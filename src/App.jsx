@@ -32,13 +32,71 @@ const startOfMonth = () => {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
 };
 const fmt  = (n) => `${CURRENCY}${Math.abs(n).toFixed(2)}`;
-const fmtD = (d) => new Date(d+"T12:00:00").toLocaleDateString("en-MY",{weekday:"short",month:"short",day:"numeric"});
 
 // ─── Category config ──────────────────────────────────────────────────────────
 const CAT_ICONS  = { trips:"🚗",bonus:"⭐",tip:"💰",fuel:"⛽",toll:"🛣️",maintenance:"🔧",car_wash:"🫧",insurance:"🛡️",food:"🍔",other:"📦" };
 const CAT_COLORS = { trips:"#00E676",bonus:"#FFD600",tip:"#69F0AE",fuel:"#FF5252",toll:"#FF6D00",maintenance:"#E040FB",car_wash:"#40C4FF",insurance:"#FF4081",food:"#FFAB40",other:"#78909C" };
 const INCOME_CATS  = ["trips","bonus","tip"];
-const EXPENSE_CATS = ["fuel","toll","maintenance","car_wash","insurance","food","other"];
+
+// ─── Bilingual text bank ──────────────────────────────────────────────────────
+const STR = {
+  ms: {
+    driverLedger: "DRIVER LEDGER · MY",
+    live: "LIVE", offline: "OFFLINE", connecting: "…",
+    cannotReach: "Tidak dapat sambung ke server — bot backend running?",
+    today: "HARI INI", week: "MINGGU INI", month: "BULAN INI",
+    dash: "📊 DASH", log: "📋 LOG", add: "➕ ADD",
+    income: "PENDAPATAN", expenses: "PERBELANJAAN",
+    breakdown: "PECAHAN KATEGORI",
+    insightTitle: "💡 ANALISIS",
+    insightLoss: (loss, pct) => `Rugi RM${loss}. Kos makan ${pct}% dari pendapatan.`,
+    insightProfit: (pct, warn) => `Simpan ${pct}% pendapatan sebagai untung. ${warn}`,
+    warnHigh: "Awas — kos agak tinggi!", warnGood: "Margin bagus, teruskan!",
+    telegramBot: "🤖 TELEGRAM BOT",
+    telegramHint: "Hantar voice note ke bot anda:",
+    telegramExample: '"10 trip dapat RM72, isi minyak RM20, toll RM4"',
+    noRecords: "Tiada rekod untuk tempoh ini.",
+    noRecordsLog: "Tiada rekod.",
+    sendHint: "Hantar voice note ke Telegram bot untuk log trips & kos.",
+    manualAdd: "📝 TAMBAH REKOD MANUAL",
+    incomeBtn: "💚 PENDAPATAN", expenseBtn: "🔴 PERBELANJAAN",
+    category: "KATEGORI", amount: "JUMLAH (RM)", numTrips: "BIL. TRIP",
+    date: "TARIKH", description: "PENERANGAN (optional)",
+    descPlaceholder: "cth: isi minyak pagi",
+    save: "➕ SIMPAN",
+    saved: "✅ Rekod disimpan!", deleted: "Dipadam",
+    trips: "trips",
+  },
+  en: {
+    driverLedger: "DRIVER LEDGER · MY",
+    live: "LIVE", offline: "OFFLINE", connecting: "…",
+    cannotReach: "Cannot reach server — is the bot backend running?",
+    today: "TODAY", week: "THIS WEEK", month: "THIS MONTH",
+    dash: "📊 DASH", log: "📋 LOG", add: "➕ ADD",
+    income: "INCOME", expenses: "EXPENSES",
+    breakdown: "BREAKDOWN",
+    insightTitle: "💡 INSIGHT",
+    insightLoss: (loss, pct) => `Losing RM${loss}. Expenses are ${pct}% of income.`,
+    insightProfit: (pct, warn) => `Keeping ${pct}% of income as profit. ${warn}`,
+    warnHigh: "Watch those costs!", warnGood: "Good margin, keep it up!",
+    telegramBot: "🤖 TELEGRAM BOT",
+    telegramHint: "Send a voice note to your bot:",
+    telegramExample: '"10 trips, made RM72, fuel RM20, toll RM4"',
+    noRecords: "No records for this period.",
+    noRecordsLog: "No records.",
+    sendHint: "Send a voice note to your Telegram bot to log trips & costs.",
+    manualAdd: "📝 ADD MANUAL ENTRY",
+    incomeBtn: "💚 INCOME", expenseBtn: "🔴 EXPENSE",
+    category: "CATEGORY", amount: "AMOUNT (RM)", numTrips: "# TRIPS",
+    date: "DATE", description: "DESCRIPTION (optional)",
+    descPlaceholder: "e.g. morning fuel stop",
+    save: "➕ SAVE",
+    saved: "✅ Entry saved!", deleted: "Deleted",
+    trips: "trips",
+  },
+};
+
+const fmtD = (d, lang) => new Date(d+"T12:00:00").toLocaleDateString(lang==="ms"?"ms-MY":"en-MY",{weekday:"short",month:"short",day:"numeric"});
 
 const summarize = (entries) => {
   const income   = entries.filter(e=>e.type==="income").reduce((s,e)=>s+e.amount,0);
@@ -58,12 +116,15 @@ export default function App() {
   const [connected,  setConnected]  = useState(null);
   const [toast,      setToast]      = useState(null);
   const [lastSync,   setLastSync]   = useState(null);
+  const [lang,       setLang]       = useState("en");
+
+  const t = STR[lang];
 
   const range = useCallback(() => {
-    const t = todayStr();
-    if (period==="today") return [t,t];
-    if (period==="week")  return [startOfWeek(),t];
-    return [startOfMonth(),t];
+    const tt = todayStr();
+    if (period==="today") return [tt,tt];
+    if (period==="week")  return [startOfWeek(),tt];
+    return [startOfMonth(),tt];
   }, [period]);
 
   const load = useCallback(async () => {
@@ -79,18 +140,19 @@ export default function App() {
   }, [range]);
 
   useEffect(()=>{ load(); },[load]);
-  useEffect(()=>{ const t=setInterval(load,30000); return ()=>clearInterval(t); },[load]);
+  useEffect(()=>{ const tm=setInterval(load,30000); return ()=>clearInterval(tm); },[load]);
 
   const toast$ = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3000); };
 
   const handleDelete = async (id) => {
     await removeEntry(id);
     setEntries(e=>e.filter(x=>x.id!==id));
-    toast$("Deleted","error");
+    toast$(t.deleted,"error");
   };
 
   const [from, to] = range();
   const S = summarize(entries);
+  const periodLabel = period==="today" ? t.today : period==="week" ? t.week : t.month;
 
   return (
     <div style={css.app}>
@@ -98,19 +160,27 @@ export default function App() {
       <div style={css.header}>
         <div>
           <div style={css.logo}>⚡ EhDrvr</div>
-          <div style={css.logoSub}>DRIVER LEDGER · MY</div>
+          <div style={css.logoSub}>{t.driverLedger}</div>
         </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{...css.dot, color: connected===null?"#888":connected?"#00E676":"#FF5252"}}>
-            {connected===null?"…":connected?"● LIVE":"● OFFLINE"}
+        <div style={{display:"flex", alignItems:"center", gap:10}}>
+          <button
+            style={css.langBtn}
+            onClick={()=>setLang(l => l==="en" ? "ms" : "en")}
+          >
+            {lang==="en" ? "🇬🇧 EN" : "🇲🇾 BM"}
+          </button>
+          <div style={{textAlign:"right"}}>
+            <div style={{...css.dot, color: connected===null?"#888":connected?"#00E676":"#FF5252"}}>
+              {connected===null?t.connecting:connected?`● ${t.live}`:`● ${t.offline}`}
+            </div>
+            {lastSync && <div style={css.sync}>{lastSync.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"})}</div>}
           </div>
-          {lastSync && <div style={css.sync}>{lastSync.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"})}</div>}
         </div>
       </div>
 
       {connected===false && (
         <div style={css.banner}>
-          ⚠️ Cannot reach server — is your bot backend running?
+          ⚠️ {t.cannotReach}
           <br/><span style={{opacity:0.6,fontSize:11}}>{API_BASE}</span>
         </div>
       )}
@@ -119,14 +189,14 @@ export default function App() {
       <div style={css.tabs}>
         {["today","week","month"].map(p=>(
           <button key={p} style={{...css.tab,...(period===p?css.tabOn:{})}} onClick={()=>setPeriod(p)}>
-            {p==="today"?"HARI INI":p==="week"?"MINGGU INI":"BULAN INI"}
+            {p==="today"?t.today:p==="week"?t.week:t.month}
           </button>
         ))}
       </div>
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
       <div style={css.nav}>
-        {[["dashboard","📊 DASH"],["log","📋 LOG"],["add","➕ ADD"]].map(([v,l])=>(
+        {[["dashboard",t.dash],["log",t.log],["add",t.add]].map(([v,l])=>(
           <button key={v} style={{...css.navBtn,...(view===v?css.navOn:{})}} onClick={()=>setView(v)}>{l}</button>
         ))}
         <button style={css.refresh} onClick={load} disabled={loading}>{loading?"⏳":"🔄"}</button>
@@ -139,24 +209,24 @@ export default function App() {
           <div style={{...css.bigCard, background: S.profit>=0
             ?"linear-gradient(135deg,#003300,#001a00)"
             :"linear-gradient(135deg,#330000,#1a0000)"}}>
-            <div style={css.bigLabel}>{period==="today"?"HARI INI":period==="week"?"MINGGU INI":"BULAN INI"}</div>
+            <div style={css.bigLabel}>{periodLabel}</div>
             <div style={{...css.bigAmt, color: S.profit>=0?"#00E676":"#FF5252"}}>
               {S.profit>=0?"+":"-"}{fmt(S.profit)}
             </div>
             <div style={css.bigSub}>
-              {S.trips>0?`${S.trips} trips · `:""}
-              {fmtD(from)}{period!=="today"?` → ${fmtD(to)}`:""}
+              {S.trips>0?`${S.trips} ${t.trips} · `:""}
+              {fmtD(from,lang)}{period!=="today"?` → ${fmtD(to,lang)}`:""}
             </div>
           </div>
 
           {/* Income / Expense split */}
           <div style={{display:"flex",gap:10,marginBottom:12}}>
             <div style={{...css.card,flex:1,marginBottom:0,borderTop:"3px solid #00E676"}}>
-              <div style={css.miniLbl}>PENDAPATAN</div>
+              <div style={css.miniLbl}>{t.income}</div>
               <div style={{...css.miniAmt,color:"#00E676"}}>{fmt(S.income)}</div>
             </div>
             <div style={{...css.card,flex:1,marginBottom:0,borderTop:"3px solid #FF5252"}}>
-              <div style={css.miniLbl}>PERBELANJAAN</div>
+              <div style={css.miniLbl}>{t.expenses}</div>
               <div style={{...css.miniAmt,color:"#FF5252"}}>{fmt(S.expenses)}</div>
             </div>
           </div>
@@ -164,7 +234,7 @@ export default function App() {
           {/* Category breakdown */}
           {Object.keys(S.byCategory).length>0 && (
             <div style={css.card}>
-              <div style={css.secTitle}>PECAHAN KATEGORI</div>
+              <div style={css.secTitle}>{t.breakdown}</div>
               {Object.entries(S.byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
                 const isInc = INCOME_CATS.includes(cat);
                 const pct = S[isInc?"income":"expenses"]>0 ? (amt/S[isInc?"income":"expenses"])*100 : 0;
@@ -189,21 +259,21 @@ export default function App() {
           {/* Insight */}
           {S.income>0 && S.expenses>0 && (
             <div style={css.insight}>
-              <div style={{fontSize:10,letterSpacing:2,color:"#4CAF50",marginBottom:6}}>💡 ANALISIS</div>
+              <div style={{fontSize:10,letterSpacing:2,color:"#4CAF50",marginBottom:6}}>{t.insightTitle}</div>
               <div style={{fontSize:13,color:"#aaa",lineHeight:1.6}}>
                 {S.profit<0
-                  ? `Rugi RM${Math.abs(S.profit).toFixed(2)}. Kos makan ${((S.expenses/S.income)*100).toFixed(0)}% dari pendapatan.`
-                  : `Simpan ${((S.profit/S.income)*100).toFixed(0)}% pendapatan sebagai untung. ${S.expenses>S.income*0.4?"Awas — kos agak tinggi!":"Margin bagus, teruskan!"}`}
+                  ? t.insightLoss(Math.abs(S.profit).toFixed(2), ((S.expenses/S.income)*100).toFixed(0))
+                  : t.insightProfit(((S.profit/S.income)*100).toFixed(0), S.expenses>S.income*0.4?t.warnHigh:t.warnGood)}
               </div>
             </div>
           )}
 
           {/* Telegram tip */}
           <div style={css.tgCard}>
-            <div style={{fontSize:10,letterSpacing:2,color:"#40C4FF",marginBottom:8}}>🤖 TELEGRAM BOT</div>
+            <div style={{fontSize:10,letterSpacing:2,color:"#40C4FF",marginBottom:8}}>{t.telegramBot}</div>
             <div style={{fontSize:12,color:"#777",lineHeight:1.8}}>
-              Hantar voice note ke bot anda:<br/>
-              <em style={{color:"#aaa"}}>"10 trip dapat RM72, isi minyak RM20, toll RM4"</em><br/><br/>
+              {t.telegramHint}<br/>
+              <em style={{color:"#aaa"}}>{t.telegramExample}</em><br/><br/>
               Commands: <code>/today</code> · <code>/week</code> · <code>/month</code>
             </div>
           </div>
@@ -211,8 +281,8 @@ export default function App() {
           {connected && S.count===0 && !loading && (
             <div style={css.empty}>
               <div style={{fontSize:48,marginBottom:12}}>🚗</div>
-              <div>Tiada rekod untuk tempoh ini.</div>
-              <div style={{opacity:0.5,marginTop:8,fontSize:12}}>Hantar voice note ke Telegram bot untuk log trips & kos.</div>
+              <div>{t.noRecords}</div>
+              <div style={{opacity:0.5,marginTop:8,fontSize:12}}>{t.sendHint}</div>
             </div>
           )}
         </div>
@@ -222,7 +292,7 @@ export default function App() {
       {view==="log" && (
         <div style={css.page}>
           {entries.length===0
-            ? <div style={css.empty}><div style={{fontSize:48}}>📋</div><div style={{marginTop:12}}>Tiada rekod.</div></div>
+            ? <div style={css.empty}><div style={{fontSize:48}}>📋</div><div style={{marginTop:12}}>{t.noRecordsLog}</div></div>
             : [...entries].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>(
               <div key={e.id} style={{...css.logRow,borderLeft:`3px solid ${CAT_COLORS[e.category]||"#555"}`}}>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -230,7 +300,7 @@ export default function App() {
                   <div>
                     <div style={{fontSize:13,color:"#ddd"}}>{e.description}</div>
                     <div style={{fontSize:10,color:"#555",marginTop:3}}>
-                      {fmtD(e.date)} · {e.category.replace("_"," ")}{e.trips?` · ${e.trips} trips`:""}
+                      {fmtD(e.date,lang)} · {e.category.replace("_"," ")}{e.trips?` · ${e.trips} ${t.trips}`:""}
                     </div>
                   </div>
                 </div>
@@ -249,9 +319,9 @@ export default function App() {
       {/* ── Add ─────────────────────────────────────────────────────────────── */}
       {view==="add" && (
         <div style={css.page}>
-          <ManualAdd onAdd={async(entry)=>{
+          <ManualAdd t={t} onAdd={async(entry)=>{
             await addEntry(entry);
-            toast$("✅ Rekod disimpan!");
+            toast$(t.saved);
             await load();
             setView("dashboard");
           }}/>
@@ -268,7 +338,7 @@ export default function App() {
 }
 
 // ─── Manual Add ───────────────────────────────────────────────────────────────
-function ManualAdd({ onAdd }) {
+function ManualAdd({ onAdd, t }) {
   const [type,   setType]   = useState("income");
   const [cat,    setCat]    = useState("trips");
   const [amount, setAmount] = useState("");
@@ -280,37 +350,37 @@ function ManualAdd({ onAdd }) {
 
   return (
     <div style={css.card}>
-      <div style={css.secTitle}>📝 TAMBAH REKOD MANUAL</div>
+      <div style={css.secTitle}>{t.manualAdd}</div>
       <div style={{display:"flex",gap:8,marginBottom:14}}>
         <button style={{...css.typeBtn,...(type==="income"?{background:"#0d1a0d",border:"1px solid #00E676",color:"#00E676"}:{})}}
-          onClick={()=>{ setType("income"); setCat("trips"); }}>💚 PENDAPATAN</button>
+          onClick={()=>{ setType("income"); setCat("trips"); }}>{t.incomeBtn}</button>
         <button style={{...css.typeBtn,...(type==="expense"?{background:"#1a0d0d",border:"1px solid #FF5252",color:"#FF5252"}:{})}}
-          onClick={()=>{ setType("expense"); setCat("fuel"); }}>🔴 PERBELANJAAN</button>
+          onClick={()=>{ setType("expense"); setCat("fuel"); }}>{t.expenseBtn}</button>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
         <div style={css.field}>
-          <label style={css.lbl}>KATEGORI</label>
+          <label style={css.lbl}>{t.category}</label>
           <select style={css.sel} value={cat} onChange={e=>setCat(e.target.value)}>
             {cats.map(c=><option key={c} value={c}>{CAT_ICONS[c]} {c.replace("_"," ").toUpperCase()}</option>)}
           </select>
         </div>
         <div style={css.field}>
-          <label style={css.lbl}>JUMLAH (RM)</label>
+          <label style={css.lbl}>{t.amount}</label>
           <input style={css.inp} type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0.00"/>
         </div>
         {cat==="trips" && (
           <div style={css.field}>
-            <label style={css.lbl}>BIL. TRIP</label>
+            <label style={css.lbl}>{t.numTrips}</label>
             <input style={css.inp} type="number" value={trips} onChange={e=>setTrips(e.target.value)} placeholder="0"/>
           </div>
         )}
         <div style={css.field}>
-          <label style={css.lbl}>TARIKH</label>
+          <label style={css.lbl}>{t.date}</label>
           <input style={css.inp} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
         </div>
         <div style={{...css.field,gridColumn:"1 / -1"}}>
-          <label style={css.lbl}>PENERANGAN (optional)</label>
-          <input style={css.inp} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="cth: isi minyak pagi"/>
+          <label style={css.lbl}>{t.description}</label>
+          <input style={css.inp} value={desc} onChange={e=>setDesc(e.target.value)} placeholder={t.descPlaceholder}/>
         </div>
       </div>
       <button style={{...css.saveBtn,marginTop:12}}
@@ -321,7 +391,7 @@ function ManualAdd({ onAdd }) {
             trips: cat==="trips"&&trips ? +trips : null, date });
           setAmount(""); setTrips(""); setDesc("");
         }}>
-        ➕ SIMPAN
+        {t.save}
       </button>
     </div>
   );
@@ -333,6 +403,7 @@ const css = {
   header:  { background:"#1a1a00", borderBottom:"2px solid #FFD600", padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center" },
   logo:    { fontSize:20, fontWeight:700, color:"#FFD600", letterSpacing:3 },
   logoSub: { fontSize:9, color:"#888", letterSpacing:4, marginTop:1 },
+  langBtn: { background:"#1a1a1a", border:"1px solid #333", color:"#ddd", fontFamily:"inherit", fontSize:11, padding:"6px 10px", borderRadius:4, cursor:"pointer", letterSpacing:1 },
   dot:     { fontSize:11, letterSpacing:2 },
   sync:    { fontSize:9, color:"#555", marginTop:2 },
   banner:  { background:"#1a0d00", border:"1px solid #FF6D00", padding:"10px 16px", fontSize:12, color:"#FF6D00", lineHeight:1.6 },
