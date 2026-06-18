@@ -143,7 +143,7 @@ const fmtD = (d, lang) => {
   const datePart = String(d).slice(0, 10);
   return new Date(datePart+"T12:00:00").toLocaleDateString(lang==="ms"?"ms-MY":"en-MY",{weekday:"short",month:"short",day:"numeric"});
 };
-const fmtT = (iso) => new Date(iso).toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"});
+const fmtT = (iso) => new Date(iso).toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Kuala_Lumpur"});
 
 function fmtHrs(hours) {
   const h = Math.floor(hours);
@@ -254,7 +254,7 @@ export default function App() {
             <div style={{...css.dot, color: connected===null?"#888":connected?"#00E676":"#FF5252"}}>
               {connected===null?t.connecting:connected?`● ${t.live}`:`● ${t.offline}`}
             </div>
-            {lastSync && <div style={css.sync}>{lastSync.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"})}</div>}
+            {lastSync && <div style={css.sync}>{lastSync.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Kuala_Lumpur"})}</div>}
           </div>
         </div>
       </div>
