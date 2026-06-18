@@ -165,11 +165,14 @@ function shiftWorkedHours(shift) {
 }
 
 const summarize = (entries, shifts) => {
-  const income   = entries.filter(e=>e.type==="income").reduce((s,e)=>s+e.amount,0);
-  const expenses = entries.filter(e=>e.type==="expense").reduce((s,e)=>s+e.amount,0);
+  // Postgres NUMERIC columns come back as strings (e.g. "24"), so amounts must
+  // be explicitly converted with Number() before summing — otherwise "+" on
+  // strings concatenates ("24"+"27" = "2427") instead of adding (24+27 = 51).
+  const income   = entries.filter(e=>e.type==="income").reduce((s,e)=>s+Number(e.amount),0);
+  const expenses = entries.filter(e=>e.type==="expense").reduce((s,e)=>s+Number(e.amount),0);
   const trips    = entries.filter(e=>e.category==="trips").reduce((s,e)=>s+(e.trips||0),0);
   const byCategory = {};
-  entries.forEach(e=>{ byCategory[e.category]=(byCategory[e.category]||0)+e.amount; });
+  entries.forEach(e=>{ byCategory[e.category]=(byCategory[e.category]||0)+Number(e.amount); });
 
   // Include both completed AND active shifts when calculating hours worked.
   // shiftWorkedHours() already handles an in-progress shift correctly by
