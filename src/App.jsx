@@ -183,23 +183,25 @@ const THEMES = {
     activeShiftBg: "#0d1a0d", activeShiftBorder: "#00E676",
     profitGradPos: "linear-gradient(135deg,#003300,#001a00)",
     profitGradNeg: "linear-gradient(135deg,#330000,#1a0000)",
+    boldText: false,
   },
   light: {
-    bg: "#F7F5F0", text: "#1a1a1a", textDim: "#666", textFaint: "#999",
-    headerBg: "#FFF6D9", headerBorder: "#F2A900",
-    cardBg: "#ffffff", cardBorder: "#e3e0d8",
-    rowBg: "#ffffff", rowBorder: "#e3e0d8",
-    inputBg: "#ffffff", inputBorder: "#d8d4c8",
-    navBg: "#ffffff", navBorder: "#e3e0d8", navOnBg: "#FFF0CC", navOnText: "#1a1a1a",
-    tabsBg: "#ffffff", tabsBorder: "#e3e0d8", tabOff: "#999",
-    btnBg: "#ffffff", btnBorder: "#d8d4c8", btnText: "#333",
-    barBg: "#ece8dc",
-    insightBg: "#EAF7EA", insightBorder: "#B9E3B9",
-    tgBg: "#E8EFFC", tgBorder: "#C2D4F5",
-    bannerBg: "#FFF1E0", bannerBorder: "#FF6D00",
-    activeShiftBg: "#EAF7EA", activeShiftBorder: "#1E9E4A",
-    profitGradPos: "linear-gradient(135deg,#E3F7E8,#F4FBF5)",
-    profitGradNeg: "linear-gradient(135deg,#FBE6E6,#FDF4F4)",
+    bg: "#F7F5F0", text: "#0d0d0d", textDim: "#3a3a3a", textFaint: "#5a5a5a",
+    headerBg: "#FFF6D9", headerBorder: "#D98A00",
+    cardBg: "#ffffff", cardBorder: "#cfcabd",
+    rowBg: "#ffffff", rowBorder: "#cfcabd",
+    inputBg: "#ffffff", inputBorder: "#b8b2a0",
+    navBg: "#ffffff", navBorder: "#cfcabd", navOnBg: "#FFE9B3", navOnText: "#0d0d0d",
+    tabsBg: "#ffffff", tabsBorder: "#cfcabd", tabOff: "#5a5a5a",
+    btnBg: "#ffffff", btnBorder: "#b8b2a0", btnText: "#0d0d0d",
+    barBg: "#ddd7c6",
+    insightBg: "#DFF3DF", insightBorder: "#8FCF8F",
+    tgBg: "#DCE8FB", tgBorder: "#9BB8EE",
+    bannerBg: "#FFE9CC", bannerBorder: "#CC5500",
+    activeShiftBg: "#DFF3DF", activeShiftBorder: "#1A7A3C",
+    profitGradPos: "linear-gradient(135deg,#D7F2DC,#EFFAF1)",
+    profitGradNeg: "linear-gradient(135deg,#FAD6D6,#FCEFEF)",
+    boldText: true, // light mode needs heavier font-weight for labels to hold contrast
   },
 };
 
@@ -371,7 +373,7 @@ export default function App() {
                     <span style={{fontSize:18,width:24}}>{CAT_ICONS[cat]||"📦"}</span>
                     <div style={{flex:1}}>
                       <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}>
-                        <span style={{color:T.textDim}}>{cat.replace("_"," ").toUpperCase()}</span>
+                        <span style={{color:T.textDim,fontWeight:T.boldText?700:400}}>{cat.replace("_"," ").toUpperCase()}</span>
                         <span style={{color:CAT_COLORS[cat]||T.text}}>{fmt(amt)}</span>
                       </div>
                       <div style={css.barBg}>
@@ -387,7 +389,7 @@ export default function App() {
           {S.income>0 && S.expenses>0 && (
             <div style={css.insight}>
               <div style={{fontSize:10,letterSpacing:2,color:ACCENT.greenDark,marginBottom:6}}>{t.insightTitle}</div>
-              <div style={{fontSize:13,color:T.textDim,lineHeight:1.6}}>
+              <div style={{fontSize:13,color:T.textDim,lineHeight:1.6,fontWeight:T.boldText?600:400}}>
                 {S.profit<0
                   ? t.insightLoss(Math.abs(S.profit).toFixed(2), ((S.expenses/S.income)*100).toFixed(0))
                   : t.insightProfit(((S.profit/S.income)*100).toFixed(0), S.expenses>S.income*0.4?t.warnHigh:t.warnGood)}
@@ -397,11 +399,11 @@ export default function App() {
 
           <div style={css.tgCard}>
             <div style={{fontSize:10,letterSpacing:2,color:ACCENT.blue,marginBottom:8}}>{t.telegramBot}</div>
-            <div style={{fontSize:12,color:T.textDim,lineHeight:1.8}}>
+            <div style={{fontSize:12,color:T.textDim,lineHeight:1.8,fontWeight:T.boldText?600:400}}>
               {t.telegramHint}<br/>
-              <em style={{color:T.textDim}}>{t.telegramExample}</em><br/><br/>
+              <em style={{color:T.textDim,fontWeight:T.boldText?700:400}}>{t.telegramExample}</em><br/><br/>
               {t.shiftHint}<br/>
-              <em style={{color:T.textDim}}>{t.shiftExample}</em><br/><br/>
+              <em style={{color:T.textDim,fontWeight:T.boldText?700:400}}>{t.shiftExample}</em><br/><br/>
               Commands: <code>/today</code> · <code>/week</code> · <code>/month</code>
             </div>
           </div>
@@ -425,8 +427,8 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
                   <span style={{fontSize:20}}>{CAT_ICONS[e.category]||"📦"}</span>
                   <div>
-                    <div style={{fontSize:13,color:T.text}}>{e.description}</div>
-                    <div style={{fontSize:10,color:T.textFaint,marginTop:3}}>
+                    <div style={{fontSize:13,color:T.text,fontWeight:T.boldText?600:400}}>{e.description}</div>
+                    <div style={{fontSize:10,color:T.textFaint,marginTop:3,fontWeight:T.boldText?700:400}}>
                       {fmtD(e.date,lang)} · {e.category.replace("_"," ")}{e.trips?` · ${e.trips} ${t.trips}`:""}
                     </div>
                   </div>
@@ -454,10 +456,10 @@ export default function App() {
                 <div key={s.id} style={{...css.shiftRow, borderLeft: `3px solid ${s.status==="active"?ACCENT.green:T.textFaint}`}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                     <div>
-                      <div style={{fontSize:13,color:T.text}}>
+                      <div style={{fontSize:13,color:T.text,fontWeight:T.boldText?600:400}}>
                         {fmtD(s.date,lang)} · {fmtT(s.start_time)}{s.end_time?` → ${fmtT(s.end_time)}`:""}
                       </div>
-                      <div style={{fontSize:10,color:T.textFaint,marginTop:3}}>
+                      <div style={{fontSize:10,color:T.textFaint,marginTop:3,fontWeight:T.boldText?700:400}}>
                         {t.duration}: {fmtHrs(hrs)}{breakCount>0?` · ${breakCount} ${t.breaks}`:""}
                       </div>
                     </div>
@@ -559,48 +561,50 @@ function ManualAdd({ onAdd, t, css, T }) {
 // correct colors when the light/dark toggle is hit. Tab/nav labels are
 // bolder (font-weight 700 + larger size) per the latest UI feedback.
 function makeCss(T) {
+  const lblWeight = T.boldText ? 700 : 400;     // small uppercase labels
+  const bodyWeight = T.boldText ? 600 : 400;    // regular body/description text
   return {
     app:     { fontFamily:"'Share Tech Mono','Courier New',monospace", background:T.bg, color:T.text, minHeight:"100vh", maxWidth:480, margin:"0 auto", paddingBottom:40, transition:"background 0.2s, color 0.2s" },
     header:  { background:T.headerBg, borderBottom:`2px solid ${T.headerBorder}`, padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center" },
     logo:    { fontSize:20, fontWeight:700, color:T.headerBorder, letterSpacing:3 },
-    logoSub: { fontSize:9, color:T.textDim, letterSpacing:4, marginTop:1 },
-    langBtn: { background:T.btnBg, border:`1px solid ${T.btnBorder}`, color:T.btnText, fontFamily:"inherit", fontSize:11, padding:"6px 10px", borderRadius:4, cursor:"pointer", letterSpacing:1 },
+    logoSub: { fontSize:9, fontWeight:lblWeight, color:T.textDim, letterSpacing:4, marginTop:1 },
+    langBtn: { background:T.btnBg, border:`1px solid ${T.btnBorder}`, color:T.btnText, fontFamily:"inherit", fontSize:11, fontWeight:lblWeight, padding:"6px 10px", borderRadius:4, cursor:"pointer", letterSpacing:1 },
     iconBtn: { background:T.btnBg, border:`1px solid ${T.btnBorder}`, color:T.btnText, fontFamily:"inherit", fontSize:13, padding:"6px 9px", borderRadius:4, cursor:"pointer", lineHeight:1 },
-    dot:     { fontSize:11, letterSpacing:2 },
-    sync:    { fontSize:9, color:T.textFaint, marginTop:2 },
-    banner:  { background:T.bannerBg, border:`1px solid ${T.bannerBorder}`, padding:"10px 16px", fontSize:12, color:T.bannerBorder, lineHeight:1.6 },
-    activeShiftBanner: { background:T.activeShiftBg, border:`1px solid ${T.activeShiftBorder}`, padding:"10px 16px", fontSize:12, color:T.activeShiftBorder, letterSpacing:0.5 },
+    dot:     { fontSize:11, fontWeight:lblWeight, letterSpacing:2 },
+    sync:    { fontSize:9, fontWeight:lblWeight, color:T.textFaint, marginTop:2 },
+    banner:  { background:T.bannerBg, border:`1px solid ${T.bannerBorder}`, padding:"10px 16px", fontSize:12, fontWeight:bodyWeight, color:T.bannerBorder, lineHeight:1.6 },
+    activeShiftBanner: { background:T.activeShiftBg, border:`1px solid ${T.activeShiftBorder}`, padding:"10px 16px", fontSize:12, fontWeight:bodyWeight, color:T.activeShiftBorder, letterSpacing:0.5 },
     // Tabs (TODAY/WEEK/MONTH) — bolder: heavier weight, larger size, stronger active state
     tabs:    { display:"flex", background:T.tabsBg, borderBottom:`1px solid ${T.tabsBorder}` },
-    tab:     { flex:1, padding:"11px 0", background:"none", border:"none", color:T.tabOff, fontSize:11, fontWeight:700, letterSpacing:1.5, cursor:"pointer", borderBottom:"3px solid transparent" },
+    tab:     { flex:1, padding:"11px 0", background:"none", border:"none", color:T.tabOff, fontSize:11, fontWeight:T.boldText?800:700, letterSpacing:1.5, cursor:"pointer", borderBottom:"3px solid transparent" },
     tabOn:   { color:T.headerBorder, borderBottom:`3px solid ${T.headerBorder}` },
     // Nav (DASH/LOG/SHIFT/ADD) — bolder: heavier weight, larger size, clearer active background
     nav:     { display:"flex", background:T.navBg, borderBottom:`1px solid ${T.navBorder}` },
-    navBtn:  { flex:1, padding:"13px 0", background:"none", border:"none", color:T.tabOff, fontSize:11, fontWeight:700, letterSpacing:0.8, cursor:"pointer" },
-    navOn:   { color:T.navOnText, background:T.navOnBg, fontWeight:800 },
+    navBtn:  { flex:1, padding:"13px 0", background:"none", border:"none", color:T.tabOff, fontSize:11, fontWeight:T.boldText?800:700, letterSpacing:0.8, cursor:"pointer" },
+    navOn:   { color:T.navOnText, background:T.navOnBg, fontWeight:900 },
     refresh: { padding:"13px 10px", background:"none", border:"none", color:T.tabOff, cursor:"pointer", fontSize:14 },
     page:    { padding:12 },
     bigCard: { padding:"24px 20px", textAlign:"center", border:`1px solid ${T.cardBorder}`, borderRadius:4, marginBottom:12 },
-    bigLabel:{ fontSize:10, letterSpacing:3, color:T.textDim, marginBottom:8 },
-    bigAmt:  { fontSize:40, fontWeight:700, lineHeight:1 },
-    bigSub:  { fontSize:11, color:T.textDim, marginTop:8 },
+    bigLabel:{ fontSize:10, fontWeight:lblWeight, letterSpacing:3, color:T.textDim, marginBottom:8 },
+    bigAmt:  { fontSize:40, fontWeight:800, lineHeight:1 },
+    bigSub:  { fontSize:11, fontWeight:bodyWeight, color:T.textDim, marginTop:8 },
     card:    { background:T.cardBg, border:`1px solid ${T.cardBorder}`, borderRadius:4, padding:16, marginBottom:12 },
-    miniLbl: { fontSize:9, letterSpacing:3, color:T.textDim, marginBottom:6 },
-    miniAmt: { fontSize:20, fontWeight:700 },
-    secTitle:{ fontSize:10, letterSpacing:3, color:T.textDim, marginBottom:14, borderBottom:`1px solid ${T.cardBorder}`, paddingBottom:8 },
+    miniLbl: { fontSize:9, fontWeight:lblWeight, letterSpacing:3, color:T.textDim, marginBottom:6 },
+    miniAmt: { fontSize:20, fontWeight:800 },
+    secTitle:{ fontSize:10, fontWeight:lblWeight, letterSpacing:3, color:T.textDim, marginBottom:14, borderBottom:`1px solid ${T.cardBorder}`, paddingBottom:8 },
     barBg:   { background:T.barBg, borderRadius:2, height:4 },
     insight: { background:T.insightBg, border:`1px solid ${T.insightBorder}`, borderRadius:4, padding:"14px 16px", marginBottom:12 },
     tgCard:  { background:T.tgBg, border:`1px solid ${T.tgBorder}`, borderRadius:4, padding:"14px 16px", marginBottom:12 },
-    empty:   { textAlign:"center", padding:"40px 20px", color:T.textFaint },
+    empty:   { textAlign:"center", padding:"40px 20px", color:T.textFaint, fontWeight:bodyWeight },
     logRow:  { display:"flex", justifyContent:"space-between", alignItems:"center", background:T.rowBg, border:`1px solid ${T.rowBorder}`, padding:"12px 14px", marginBottom:8, borderRadius:4 },
     shiftRow:{ background:T.rowBg, border:`1px solid ${T.rowBorder}`, padding:"12px 14px", marginBottom:8, borderRadius:4 },
-    del:     { background:"none", border:"none", color:T.textFaint, cursor:"pointer", fontSize:12 },
-    typeBtn: { flex:1, padding:"10px", background:T.inputBg, border:`1px solid ${T.inputBorder}`, borderRadius:4, color:T.textDim, fontFamily:"inherit", fontSize:11, cursor:"pointer" },
+    del:     { background:"none", border:"none", color:T.textFaint, cursor:"pointer", fontSize:12, fontWeight:T.boldText?700:400 },
+    typeBtn: { flex:1, padding:"10px", background:T.inputBg, border:`1px solid ${T.inputBorder}`, borderRadius:4, color:T.textDim, fontFamily:"inherit", fontSize:11, fontWeight:lblWeight, cursor:"pointer" },
     field:   { display:"flex", flexDirection:"column" },
-    lbl:     { fontSize:9, letterSpacing:2, color:T.textDim, marginBottom:5 },
-    inp:     { background:T.inputBg, border:`1px solid ${T.inputBorder}`, borderRadius:4, color:T.text, padding:"10px", fontFamily:"inherit", fontSize:13 },
-    sel:     { background:T.inputBg, border:`1px solid ${T.inputBorder}`, borderRadius:4, color:T.text, padding:"10px 8px", fontFamily:"inherit", fontSize:12 },
-    saveBtn: { width:"100%", padding:"14px", background:T.headerBorder, border:"none", borderRadius:4, color: T.bg==="#080808"?"#000":"#1a1a1a", fontSize:12, letterSpacing:2, cursor:"pointer", fontWeight:700, fontFamily:"inherit" },
+    lbl:     { fontSize:9, fontWeight:lblWeight, letterSpacing:2, color:T.textDim, marginBottom:5 },
+    inp:     { background:T.inputBg, border:`1px solid ${T.inputBorder}`, borderRadius:4, color:T.text, padding:"10px", fontFamily:"inherit", fontSize:13, fontWeight:bodyWeight },
+    sel:     { background:T.inputBg, border:`1px solid ${T.inputBorder}`, borderRadius:4, color:T.text, padding:"10px 8px", fontFamily:"inherit", fontSize:12, fontWeight:bodyWeight },
+    saveBtn: { width:"100%", padding:"14px", background:T.headerBorder, border:"none", borderRadius:4, color: T.bg==="#080808"?"#000":"#fff", fontSize:12, letterSpacing:2, cursor:"pointer", fontWeight:800, fontFamily:"inherit" },
     toast:   { position:"fixed", bottom:20, left:"50%", transform:"translateX(-50%)", padding:"12px 24px", borderRadius:4, color:"#fff", fontWeight:700, fontSize:13, letterSpacing:1, zIndex:999 },
   };
 }
